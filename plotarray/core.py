@@ -116,7 +116,8 @@ def _plot_histogram(plot_dic, ax, defaults):
                 continue
             X.append(Xvalue)
         if len(X) < 1:
-            mylog.info('No data found within xlim of ({}, {})'.format(defaults['xlim'][0], defaults['xlim'][1]))
+            msg_tmpl = '{} No data found within xlim of ({}, {})'
+            mylog.info(msg_tmpl.format(defaults['info_key'], defaults['xlim'][0], defaults['xlim'][1]))
             return ax
     else:
         X = raw_X
@@ -126,7 +127,7 @@ def _plot_histogram(plot_dic, ax, defaults):
     try:
         hist, bin_edges, patches = ax.hist(X, defaults['N_bins'], color=defaults['colour'], alpha=defaults['alpha'])        
     except AttributeError as e:
-        mylog.info('No data found.')
+        mylog.info('{} No data found.'.format(defaults['info_key']))
         return ax
         
     xmin, xmax = min(X)-mX/2.0, max(X)+mX/2.0 
@@ -138,6 +139,8 @@ def _plot_histogram(plot_dic, ax, defaults):
     if defaults.get('lognormal_fit', False) and N_bars > 10:
         x_pdf, y_pdf, stats_pdf = fit_lognormal_to_histogram(hist=hist, bin_edges=bin_edges)
 
+        mylog.info('{0} Mean:{1.mean} SD:{1.standard_deviation}'.format(defaults['info_key'], stats_pdf))
+        
         ax2 = ax.twinx()
         ax2.plot(x_pdf, y_pdf, 'k', linewidth=2)
         ax2.set_ylabel('y of PDF')
@@ -146,11 +149,14 @@ def _plot_histogram(plot_dic, ax, defaults):
     
     return ax
 
-def _get_plot_defaults(ax_key, plot_series, plot_info):
-    mylog.debug('Processing ax_key:{} plot_series:{} plot_info:{}'.format(ax_key, plot_series, plot_info[ax_key]))
+def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
+    info_key = 'Filename:{} plot_series:{}'.format(filename, plot_series)
+    
+    msg_tmpl = 'Processing ax_key:{} plot_series:{} plot_info:{} {}'
+    mylog.debug(msg_tmpl.format(ax_key, plot_series, plot_info[ax_key], info_key))
     
     colour_key = plot_info[ax_key]['series'][plot_series]
-    mylog.debug('Plot series {} has colour_key: {}'.format(plot_series, colour_key))
+    mylog.debug('{} has colour_key: {}'.format(info_key, colour_key))
 
     defaults = dict(alpha=0.25, markersize=2, legend=None, addvline=False, lognormal_fit=False)
     if plot_info[ax_key]['type'] == 'histogram':
@@ -158,8 +164,8 @@ def _get_plot_defaults(ax_key, plot_series, plot_info):
         
     for mpl_key in defaults.keys():
         value_dic = plot_info[ax_key].get(mpl_key, None)
-        mylog.debug('Setting plot parameter {} using value dic: {}'.format(mpl_key, value_dic))
         if value_dic:
+            mylog.debug('{} Setting plot parameter {} using value dic: {}'.format(info_key, mpl_key, value_dic))
             defaults[mpl_key] = value_dic.get(plot_series, defaults[mpl_key])
 
     defaults['colour'] = colour_dic[colour_key]
@@ -168,8 +174,9 @@ def _get_plot_defaults(ax_key, plot_series, plot_info):
         defaults['xlim'] = plot_info[ax_key]['mpl'].get('xlim', None)
         defaults['function'] = plot_info[ax_key].get('function', None)
 
+    defaults['info_key'] = info_key
     mylog.debug('Plot defaults: {}'.format(defaults))
-    
+
     return defaults
             
 def make_plot_array(plot_data, plot_info, filename=None):
@@ -183,7 +190,7 @@ def make_plot_array(plot_data, plot_info, filename=None):
     up the loading of plot_data from an HDF5 file prior to calling this function.
     '''
     fig, ax_dic = _get_figure(plot_info)
-
+    
     for ax_key, ax in ax_dic.items():
         for plot_series, plot_dic in plot_data.items():
             if plot_series not in plot_info[ax_key]['series']:
@@ -196,7 +203,7 @@ def make_plot_array(plot_data, plot_info, filename=None):
                 continue
             #print((len(plot_dic['x']), len(plot_dic['y'])))
 
-            defaults = _get_plot_defaults(ax_key, plot_series, plot_info)
+            defaults = _get_plot_defaults(ax_key, plot_series, plot_info, filename)
                 
             if plot_info[ax_key]['type'] == 'scatter':
                 ax_dic[ax_key] = _plot_scatter(plot_dic, ax, defaults)

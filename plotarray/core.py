@@ -10,10 +10,11 @@ mylog.debug('Entering {0}'.format(__name__))
 from . structures import colours, colour_dic
 from . stats import list_stats, fit_lognormal_to_histogram
 
-def retrieve_plot_data(filename):
+def retrieve_plot_data(filename, verbose=True):
     '''
     Used to retrieve plot_data from an HDF5 file.
     '''
+    mylog.debug('Calling {}.{} with filename {}'.format(__name__, inspect.stack()[0][3], filename))
     if os.path.exists(filename):
         try:
             h5_file = h5py.File(filename, 'r')
@@ -26,6 +27,10 @@ def retrieve_plot_data(filename):
         for series_key, series_dic in h5_file.items():
             for data_key, data_list in series_dic.items():
                 plot_data[series_key][data_key] = data_list
+
+        if verbose:
+            mylog.info('Retrieving plot data from: {}'.format(filename))
+
         return plot_data
         
     return None

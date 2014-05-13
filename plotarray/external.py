@@ -1,6 +1,8 @@
 import os
 import inspect
 import logging
+import webcolors
+
 from collections import namedtuple, defaultdict, OrderedDict
 
 ###########################################################

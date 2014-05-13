@@ -2,6 +2,7 @@ import os
 import inspect
 import logging
 import webcolors
+import itertools
 
 from collections import namedtuple, defaultdict, OrderedDict
 

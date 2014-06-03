@@ -22,7 +22,10 @@ colour_dic.update(OrderedDict([('red', '#900000'),
                                ('orange', '#FF9933'),
                                ('yellow', '#DAA520'),
                                ('teal', '#008080'),
-                               ('indigo', '#4B0082')])
+                               ('indigo', '#4B0082'),
+                               ('ERY', '#CC0066'),
+                               ('TEL', '#006600'),
+                               ('control', '#000099')])
               )
 
 colour_name_cycle = itertools.cycle(colour_dic)

@@ -4,17 +4,17 @@ This module holds the core routines of plotarray.
 __all__ = ['retrieve_plot_data', 'save_plot_data', 'make_plot_array']
 
 from . external import *
-mylog = setup_custom_logger(__name__)
+mylog = setup_custom_logger(__name__, logging_directory=_log_dir)
 mylog.debug('Entering {0}'.format(__name__))
 
 from . structures import colours, colour_dic
 from . stats import list_stats, fit_lognormal_to_histogram
 
+@log_with(mylog)
 def retrieve_plot_data(filename, verbose=True):
     '''
     Used to retrieve plot_data from an HDF5 file.
     '''
-    mylog.debug('Calling {}.{} with filename {}'.format(__name__, inspect.stack()[0][3], filename))
     if os.path.exists(filename):
         try:
             h5_file = h5py.File(filename, 'r')
@@ -34,7 +34,8 @@ def retrieve_plot_data(filename, verbose=True):
         return plot_data
         
     return None
-    
+
+@log_with(mylog)
 def save_plot_data(plot_data, filename):
     '''
     Used to save plot_data to an HDF5 file.
@@ -183,7 +184,8 @@ def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
     mylog.debug('Plot defaults: {}'.format(defaults))
 
     return defaults
-            
+
+@log_with(mylog)
 def make_plot_array(plot_data, plot_info, filename=None):
     '''
     The workhorse function that makes all plots in the array and saves them together in a file.

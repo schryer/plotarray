@@ -4,7 +4,7 @@ This module holds the core routines of plotarray.
 __all__ = ['retrieve_plot_data', 'save_plot_data', 'make_plot_array']
 
 from . external import *
-mylog = setup_custom_logger(__name__, logging_directory=_log_dir)
+mylog = setup_custom_logger(__name__, logging_directory=logging_directory)
 mylog.debug('Entering {0}'.format(__name__))
 
 from . structures import colours, colour_dic
@@ -73,6 +73,7 @@ def save_plot_data(plot_data, filename):
             mylog.debug(msg_tmpl.format(h5_key, len(data_list), dtype))
             h5_file.create_dataset(h5_key, data=numpy.array(data_list, dtype=dtype))
 
+@log_with(mylog)
 def _get_figure(plot_info):
     
     fig = plt.figure(figsize=plot_info['figsize'])
@@ -93,11 +94,12 @@ def _get_figure(plot_info):
             
     return fig, ax_dic
 
+@log_with(mylog)
 def _plot_scatter(plot_dic, ax, defaults):
     
     X, Y = plot_dic['x'], plot_dic['y']
 
-    ax.plot(X, Y, marker='o', linestyle='None', label=defaults['legend'],
+    ax.plot(X, Y, marker=defaults['marker'], linestyle='None', label=defaults['legend'],
             markersize=defaults['markersize'], markerfacecolor=defaults['colour'], markeredgewidth=0,
             alpha=defaults['alpha'])
 
@@ -105,7 +107,8 @@ def _plot_scatter(plot_dic, ax, defaults):
         ax.axvline(list_stats(X).median, color=defaults['colour'], ls='-')
 
     return ax
-    
+
+@log_with(mylog)
 def _plot_histogram(plot_dic, ax, defaults):
                     
     raw_X = plot_dic['x']
@@ -154,7 +157,8 @@ def _plot_histogram(plot_dic, ax, defaults):
                  ha='center', va='center', transform=ax.transAxes)
     
     return ax
-
+    
+@log_with(mylog)
 def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
     info_key = 'Filename:{} plot_series:{}'.format(filename, plot_series)
     
@@ -164,7 +168,7 @@ def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
     colour_key = plot_info[ax_key]['series'][plot_series]
     mylog.debug('{} has colour_key: {}'.format(info_key, colour_key))
 
-    defaults = dict(alpha=0.25, markersize=2, legend=None, addvline=False, lognormal_fit=False)
+    defaults = dict(alpha=0.25, markersize=2, marker='o', legend=None, addvline=False, lognormal_fit=False)
     if plot_info[ax_key]['type'] == 'histogram':
         defaults['N_bins'] = 50
         
@@ -186,7 +190,7 @@ def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
     return defaults
 
 @log_with(mylog)
-def make_plot_array(plot_data, plot_info, filename=None):
+def make_plot_array(plot_data, plot_info, filename='default_plotarray_filename.pdf'):
     '''
     The workhorse function that makes all plots in the array and saves them together in a file.
 
@@ -197,7 +201,7 @@ def make_plot_array(plot_data, plot_info, filename=None):
     up the loading of plot_data from an HDF5 file prior to calling this function.
     '''
     fig, ax_dic = _get_figure(plot_info)
-    
+
     for ax_key, ax in ax_dic.items():
         for plot_series, plot_dic in plot_data.items():
             if plot_series not in plot_info[ax_key]['series']:
@@ -231,9 +235,6 @@ def make_plot_array(plot_data, plot_info, filename=None):
         plt.setp(ax, **plot_info[ax_key]['mpl'])
 
     plt.tight_layout(rect=(0, 0, 1, plot_info.get('topspace', 1)))
-
-    if not filename:
-        filename = 'default_plotarray_filename.pdf'
         
     mylog.info('Saving figure: {0}'.format(filename))
     plt.savefig(filename)

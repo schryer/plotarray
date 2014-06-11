@@ -31,7 +31,7 @@ from logbuilder import setup_custom_logger, log_with
 #   End of external imports 
 ###########################################################
 
-_log_dir = 'log'
+logging_directory = 'log'
 
-mylog = setup_custom_logger(__name__, logging_directory=_log_dir)
+mylog = setup_custom_logger(__name__, logging_directory=logging_directory)
 mylog.debug('Finshed importing external libraries {}'.format(__name__))

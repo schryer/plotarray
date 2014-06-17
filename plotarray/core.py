@@ -223,7 +223,7 @@ def make_plot_array(plot_data, plot_info, filename='default_plotarray_filename.p
                 ax_dic[ax_key] = _plot_histogram(plot_dic, ax, defaults)
 
         for line_key in ('axvlines', 'axhlines'):
-            if plot_info[ax_key]['mpl'].get(line_key, False):
+            if line_key in plot_info[ax_key]['mpl'].keys():
                 for axl in plot_info[ax_key]['mpl'][line_key]: 
                     if axl.get('color', False):
                         if axl['color'] in colour_dic.keys():

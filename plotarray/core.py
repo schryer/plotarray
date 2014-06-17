@@ -228,7 +228,10 @@ def make_plot_array(plot_data, plot_info, filename='default_plotarray_filename.p
                     if axl.get('color', False):
                         if axl['color'] in colour_dic.keys():
                             axl['color'] = colour_dic[axl['color']]
-                    ax.axvline(**axl)
+                    if line_key == 'axvlines':
+                        ax.axvline(**axl)
+                    if line_key == 'axhlines':
+                        ax.axhline(**axl)
 
                 del plot_info[ax_key]['mpl'][line_key]
                 

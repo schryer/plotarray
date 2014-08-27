@@ -14,6 +14,10 @@ from . stats import list_stats, fit_lognormal_to_histogram
 def retrieve_plot_data(filename, verbose=True):
     '''
     Used to retrieve plot_data from an HDF5 file.
+
+    :param filename: The HDF5 filename to retrieve the plot_data from.
+    :type filename: :py:obj:`str`
+    :returns: :py:obj:`None` if filename does not exist, otherwise plot_data (:py:obj:`dict`)
     '''
     if os.path.exists(filename):
         try:
@@ -39,6 +43,11 @@ def retrieve_plot_data(filename, verbose=True):
 def save_plot_data(plot_data, filename):
     '''
     Used to save plot_data to an HDF5 file.
+
+    :param plot_data: The plot_data dictionary to be saved.
+    :type plot_data: :py:obj:`dict`
+    :param filename: The HDF5 filename to save plot_data into.
+    :type filename: :py:obj:`str`
     '''
 
     mylog.info('Saving table: {}'.format(filename))
@@ -191,14 +200,20 @@ def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
 
 @log_with(mylog)
 def make_plot_array(plot_data, plot_info, filename='default_plotarray_filename.pdf'):
-    '''
-    The workhorse function that makes all plots in the array and saves them together in a file.
+    '''The workhorse function that makes all plots in the array and saves them together in a file.
 
-    All information about how to construct the plot is contained in plot_info.
-    All data series refered to in plot_info are contained in plot_data.
-
-    Both retrieve_plot_data and save_plot_data can be used together to speed
-    up the loading of plot_data from an HDF5 file prior to calling this function.
+    The functions :func:`plotarray.retrieve_plot_data` and
+    :func:`plotarray.save_plot_data` can be used together to speed up
+    the loading of plot_data from an HDF5 file prior to calling this
+    function.
+    
+    :param plot_data: All data series referred to in plot_info are contained in plot_data.
+    :type plot_data: :py:obj:`dict`
+    :param plot_info: All information about how to construct the plot is contained in plot_info.
+    :type plot_info: :py:obj:`dict`
+    :param filename: The filename to save the plot as. The extension of this filename should be
+                     one that is recognized by matplotlib.
+    :type filename: :py:obj:`str`
     '''
     fig, ax_dic = _get_figure(plot_info)
 

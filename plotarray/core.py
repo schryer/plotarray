@@ -202,17 +202,16 @@ def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
 def make_plot_array(plot_data, plot_info, filename='default_plotarray_filename.pdf'):
     '''The workhorse function that makes all plots in the array and saves them together in a file.
 
-    The functions :func:`plotarray.retrieve_plot_data` and
-    :func:`plotarray.save_plot_data` can be used together to speed up
-    the loading of plot_data from an HDF5 file prior to calling this
-    function.
+    |  The functions :func:`plotarray.retrieve_plot_data` and :func:`plotarray.save_plot_data`
+    |  can be used together to speed up the loading of plot_data from an HDF5 file prior to
+    |  calling this function.
     
     :param plot_data: All data series referred to in plot_info are contained in plot_data.
     :type plot_data: :py:obj:`dict`
     :param plot_info: All information about how to construct the plot is contained in plot_info.
     :type plot_info: :py:obj:`dict`
-    :param filename: The filename to save the plot as. The extension of this filename should be
-                     one that is recognized by matplotlib.
+    :param filename: The filename to save the plot as. The extension of this filename |br|
+                     should be one that is recognized by matplotlib.
     :type filename: :py:obj:`str`
     '''
     fig, ax_dic = _get_figure(plot_info)

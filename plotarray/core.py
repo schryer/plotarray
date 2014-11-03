@@ -108,6 +108,9 @@ def _plot_scatter(plot_dic, ax, defaults):
     
     X, Y = plot_dic['x'], plot_dic['y']
 
+    if len(X) != len(Y):
+        raise UserWarning('You have supplied data that is not the same shape.', len(X), len(Y), defaults)
+    
     ax.plot(X, Y, marker=defaults['marker'], linestyle='None', label=defaults['legend'],
             markersize=defaults['markersize'], markerfacecolor=defaults['colour'], markeredgewidth=0,
             alpha=defaults['alpha'])
@@ -115,8 +118,44 @@ def _plot_scatter(plot_dic, ax, defaults):
     if defaults['addvline']:
         ax.axvline(list_stats(X).median, color=defaults['colour'], ls='-')
 
+    if defaults['trendline']:
+        X[X == float('-inf')] = 0
+        Y[Y == float('-inf')] = 0
+
+        if defaults['trendline_through_zero']:
+            A = numpy.vstack([X, numpy.zeros(len(X))]).T
+        else:
+            A = numpy.vstack([X, numpy.ones(len(X))]).T
+            
+        slope, intercept = numpy.linalg.lstsq(A, Y)[0]
+        
+        x_fit = numpy.linspace(numpy.min(X), numpy.max(X), 2)
+        ax.plot(x_fit, slope*x_fit + intercept, color=defaults['colour'], linestyle=defaults['trendline_style'])
+        
     return ax
 
+@log_with(mylog)
+def _plot_hinton(plot_dic, ax, defaults):
+
+    matrix = plot_dic['matrix']
+
+    if not defaults['max_weight']:
+        max_weight = 2 ** numpy.ceil(numpy.log(numpy.abs(matrix).max()) / numpy.log(2))
+
+    ax.patch.set_facecolor('gray')
+    ax.set_aspect('equal', 'box')
+    ax.xaxis.set_major_locator(plt.NullLocator())
+    ax.yaxis.set_major_locator(plt.NullLocator())
+
+    for (x,y), w in numpy.ndenumerate(matrix):
+        color = 'white' if w > 0 else 'black'
+        size = numpy.sqrt(numpy.abs(w))
+        rect = plt.Rectangle([x - size / 2, y - size / 2], size, size,
+                             facecolor=color, edgecolor=color)
+        ax.add_patch(rect)
+
+    return ax
+    
 @log_with(mylog)
 def _plot_histogram(plot_dic, ax, defaults):
                     
@@ -193,6 +232,12 @@ def _get_plot_defaults(ax_key, plot_series, plot_info, filename):
         defaults['xlim'] = plot_info[ax_key]['mpl'].get('xlim', None)
         defaults['function'] = plot_info[ax_key].get('function', None)
 
+    if plot_info[ax_key]['type'] == 'scatter':
+        defaults['trendline'] = plot_info[ax_key].get('trendline', {}).get(plot_series, None)
+        defaults['trendline_style'] = plot_info[ax_key].get('trendline_style', {}).get(plot_series, '-')
+        defaults['trendline_through_zero'] = plot_info[ax_key].get('trendline_through_zero', {}).get(plot_series, False)
+        
+
     defaults['info_key'] = info_key
     mylog.debug('Plot defaults: {}'.format(defaults))
 
@@ -248,6 +293,14 @@ def make_plot_array(plot_data, plot_info, filename='default_plotarray_filename.p
                         ax.axhline(**axl)
 
                 del plot_info[ax_key]['mpl'][line_key]
+
+        if plot_info[ax_key]['mpl'].get('xticklabels'):
+            if plot_info[ax_key]['mpl'].get('rotate_xticklabels'):
+                rotation = plot_info[ax_key]['mpl']['rotate_xticklabels']
+                del plot_info[ax_key]['mpl']['rotate_xticklabels']
+                
+            ax.set_xticklabels(plot_info[ax_key]['mpl']['xticklabels'], rotation=rotation)
+            del plot_info[ax_key]['mpl']['xticklabels']
                 
         plt.setp(ax, **plot_info[ax_key]['mpl'])
 

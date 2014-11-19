@@ -30,7 +30,7 @@ def retrieve_plot_data(filename, verbose=True):
         plot_data = defaultdict(dict)
         for series_key, series_dic in h5_file.items():
             for data_key, data_list in series_dic.items():
-                plot_data[series_key][data_key] = data_list
+                plot_data[series_key][data_key] = data_list.value
 
         if verbose:
             mylog.info('Retrieving plot data from: {}'.format(filename))

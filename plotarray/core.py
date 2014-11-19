@@ -50,6 +50,30 @@ def save_plot_data(plot_data, filename):
     :type filename: :py:obj:`str`
     '''
 
+    def get_dtype(item):
+        if hasattr(item, '__len__'):
+            data_length = len(item)
+            if any([type(i) in (float, numpy.float64) for i in item]):
+                dtype = 'float64'
+            elif all([type(i) in (int, numpy.int64) for i in item]):
+                dtype = 'int64'
+            elif all([type(i) == str for i in item]):
+                max_length = max([len(i) for i in item])
+                dtype = '|S{}'.format(max_length)
+            else:
+                raise NotImplementedError('This data type has not yet been implemented.', type(item[0]))
+        else:
+            data_length = 1
+            if type(item) in (float, numpy.float64):
+                dtype = 'float64'
+            elif type(item) in (int, numpy.int64):
+                dtype = 'int64'
+            elif type(item) == str:
+                dtype = '|S{}'.format(len(item))
+            else:
+                raise NotImplementedError('This data type has not yet been implemented.', type(item))
+        return dtype, data_length
+    
     mylog.info('Saving table: {}'.format(filename))
 
     h5_file = h5py.File(filename, 'w')
@@ -57,29 +81,23 @@ def save_plot_data(plot_data, filename):
     for series_key, series_dic in plot_data.items():
         series_length = None
         for data_key, data_list in series_dic.items():
-            if len(data_list) < 1:
-                mylog.info('Skipping series {} with data type {} because it has zero length.'.format(series_key, data_key))
-                continue
-            if not series_length:
-                series_length == len(data_list)
-            elif len(data_list) != series_length:
-                msg_tmpl = 'Skippping {} with data type {} because its length does not match the series length.'
-                mylog.info(msg_tmpl.format(series_key, data_key))
-                continue
+            if data_key in ['X', 'Y']:
+                if len(data_list) < 1:
+                    msg_tmpl = 'Skipping series {} with data type {} because it has zero length.'
+                    mylog.info(msg_tmpl.format(series_key, data_key))
+                    continue
+                if not series_length:
+                    series_length == len(data_list)
+                elif len(data_list) != series_length:
+                    msg_tmpl = 'Skippping {} with data type {} because its length does not match the series length.'
+                    mylog.info(msg_tmpl.format(series_key, data_key))
+                    continue
 
-            if any([type(item) in (float, numpy.float64) for item in data_list]):
-                dtype = 'float64'
-            elif all([type(item) == int for item in data_list]):
-                dtype = 'int64'
-            elif all([type(item) == str for item in data_list]):
-                max_length = max([len(item) for item in data_list])
-                dtype = '|S{}'.format(max_length)
-            else:
-                raise NotImplementedError('This data type has not yet been implemented.', type(data_list[0]))
-            
+            dtype, data_length = get_dtype(data_list)
+                    
             h5_key = '{}/{}'.format(series_key, data_key)
             msg_tmpl = 'Adding data series {} to HDF5 file with {} data points of type {}'
-            mylog.debug(msg_tmpl.format(h5_key, len(data_list), dtype))
+            mylog.debug(msg_tmpl.format(h5_key, data_length, dtype))
             h5_file.create_dataset(h5_key, data=numpy.array(data_list, dtype=dtype))
 
 @log_with(mylog)

@@ -1,6 +1,5 @@
 import os
 import inspect
-import logging
 import webcolors
 import itertools
 
@@ -22,7 +21,14 @@ rcParams['font.serif'] = ['Computer Modern Sans Serif']
 rcParams['mathtext.default'] = 'regular'
 
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+import matplotlib.gridspec as mpl_gridspec
+import matplotlib.cm as mpl_colour_maps
+import matplotlib.colors as mpl_colours
+
+def make_colour_map(minimum_value=0, maximum_value=1, colour_map='jet'):
+    return mpl_colour_maps.ScalarMappable(norm=mpl_colours.Normalize(vmin=minimum_value,
+                                                                     vmax=maximum_value),
+                                          cmap=plt.get_cmap(colour_map))
 
 from corefunctions import namedtuple, defaultdict, OrderedDict
 

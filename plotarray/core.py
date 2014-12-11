@@ -30,7 +30,11 @@ def retrieve_plot_data(filename, verbose=True):
         plot_data = defaultdict(dict)
         for series_key, series_dic in h5_file.items():
             for data_key, data_list in series_dic.items():
-                plot_data[series_key][data_key] = data_list.value
+                if hasattr(data_list, 'value'):
+                    plot_data[series_key][data_key] = data_list.value
+                else:
+                    dl = [v for k, v in data_list.items()]
+                    print(dl, type(dl), data_key)
 
         if verbose:
             mylog.info('Retrieving plot data from: {}'.format(filename))
@@ -51,9 +55,16 @@ def save_plot_data(plot_data, filename):
     '''
 
     def get_dtype(item):
+        return_item = item
+        
         if hasattr(item, '__len__'):
             data_length = len(item)
-            if any([type(i) in (float, numpy.float64) for i in item]):
+            if any([type(i)  == numpy.ndarray for i in item]):
+                dtype = 'array_of_arrays'
+            elif  any([type(i) == list for i in item]):
+                dtype = 'array_of_arrays'
+                return_item = [numpy.array(i) for i in item]
+            elif any([type(i) in (float, numpy.float64) for i in item]):
                 dtype = 'float64'
             elif all([type(i) in (int, numpy.int64) for i in item]):
                 dtype = 'int64'
@@ -61,6 +72,7 @@ def save_plot_data(plot_data, filename):
                 max_length = max([len(i) for i in item])
                 dtype = '|S{}'.format(max_length)
             else:
+                #print(item, type(item))
                 raise NotImplementedError('This data type has not yet been implemented.', type(item[0]))
         else:
             data_length = 1
@@ -72,7 +84,7 @@ def save_plot_data(plot_data, filename):
                 dtype = '|S{}'.format(len(item))
             else:
                 raise NotImplementedError('This data type has not yet been implemented.', type(item))
-        return dtype, data_length
+        return dtype, data_length, return_item
     
     mylog.info('Saving table: {}'.format(filename))
 
@@ -93,12 +105,17 @@ def save_plot_data(plot_data, filename):
                     mylog.info(msg_tmpl.format(series_key, data_key))
                     continue
 
-            dtype, data_length = get_dtype(data_list)
-                    
+            dtype, data_length, d_list = get_dtype(data_list)
+
             h5_key = '{}/{}'.format(series_key, data_key)
             msg_tmpl = 'Adding data series {} to HDF5 file with {} data points of type {}'
-            mylog.debug(msg_tmpl.format(h5_key, data_length, dtype))
-            h5_file.create_dataset(h5_key, data=numpy.array(data_list, dtype=dtype))
+            
+            if dtype == 'array_of_arrays':
+                mylog.debug(msg_tmpl.format(h5_key, (len(d_list), len(d_list[0])), 'numpy.ndarray'))
+                h5_file.create_dataset(h5_key, data=numpy.array(d_list))
+            else:
+                mylog.debug(msg_tmpl.format(h5_key, data_length, dtype))
+                h5_file.create_dataset(h5_key, data=numpy.array(d_list, dtype=dtype))
 
 @log_with(mylog)
 def _get_figure(plot_info):
@@ -113,7 +130,7 @@ def _get_figure(plot_info):
         loc, colspan, rowspan = key
         mylog.debug('loc:{} colspan:{} rowspan:{}'.format(loc, colspan, rowspan))
 
-        gs = gridspec.GridSpec(plot_info['shape'][0], plot_info['shape'][1])
+        gs = mpl_gridspec.GridSpec(plot_info['shape'][0], plot_info['shape'][1])
         subplotspec = gs.new_subplotspec(loc, rowspan, colspan)        
         ax = plt.subplot(subplotspec)
 
